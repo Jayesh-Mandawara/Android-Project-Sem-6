@@ -25,7 +25,11 @@ exports.getTickets = async (req, res) => {
     try {
         let filter = {};
         if (req.user.role === "STUDENT") {
-            filter = { student: req.user.id };
+            filter.student = req.user.id;
+        }
+
+        if (req.query.courseId) {
+            filter.course = req.query.courseId;
         }
 
         const tickets = await Ticket.find(filter).populate("student", "name email").populate("course", "title");
