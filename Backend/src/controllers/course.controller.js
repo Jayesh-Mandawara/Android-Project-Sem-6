@@ -4,39 +4,41 @@ const getUnlockedVideos = require("../utils/unlockLogic");
 
 exports.getCourse = async (req, res) => {
     try {
-        const { userId, courseId } = req.query;
-
-        // const course = await Course.findById(courseId);
-        // const enrollment = await Enrollment.findOne({ userId, courseId });
-
-        // if (!enrollment) {
-        //     return res.status(400).json({ message: "Not enrolled" });
-        // }
-
-        // const unlockedVideos = getUnlockedVideos(course, enrollment.enrolledAt);
-
-        // res.json({
-        //     ...course.toObject(),
-        //     videos: unlockedVideos,
-        // });
+        const { courseId } = req.params; // Changed to params for better REST
+        const userId = req.user.id;
 
         const course = await Course.findById(courseId);
-        const enrollment = await Enrollment.findOne({ userId, courseId });
-
         if (!course) {
-            return res.status(404).json({ message: "Course not found" });
+            return res.status(404).json({ status: "fail", message: "Course not found" });
         }
 
-        let enrolledAt = enrollment?.enrolledAt || new Date();
+        // If user is STUDENT, check enrollment
+        if (req.user.role === "STUDENT") {
+            const enrollment = await Enrollment.findOne({ userId, courseId });
+            if (!enrollment) {
+                return res.status(403).json({
+                    status: "fail",
+                    message: "You must be enrolled to access this course content",
+                });
+            }
 
-        const unlockedVideos = getUnlockedVideos(course, enrolledAt);
+            const unlockedVideos = getUnlockedVideos(course, enrollment.enrolledAt);
+            return res.status(200).json({
+                status: "success",
+                data: {
+                    ...course.toObject(),
+                    videos: unlockedVideos,
+                },
+            });
+        }
 
-        res.json({
-            ...course.toObject(),
-            videos: unlockedVideos,
+        // Admin/Instructor can see all videos
+        res.status(200).json({
+            status: "success",
+            data: { course },
         });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ status: "error", message: err.message });
     }
 };
 
@@ -47,23 +49,30 @@ exports.createCourse = async (req, res) => {
         const course = await Course.create({
             title,
             description,
-            instructorName,
+            instructorName: instructorName || req.user.name,
             coverImageUrl,
             totalDays,
             videos,
         });
 
-        res.json(course);
+        res.status(201).json({
+            status: "success",
+            data: { course },
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ status: "fail", message: err.message });
     }
 };
 
 exports.getAllCourses = async (req, res) => {
     try {
         const courses = await Course.find();
-        res.json(courses);
+        res.status(200).json({
+            status: "success",
+            results: courses.length,
+            data: { courses },
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ status: "error", message: err.message });
     }
 };

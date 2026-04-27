@@ -11,7 +11,11 @@ app.use(express.json());
 
 connectDB();
 
+app.use("/api/auth", require("./src/routes/auth.route"));
+app.use("/api/users", require("./src/routes/user.route"));
 app.use("/api/courses", require("./src/routes/course.route"));
+app.use("/api/enroll", require("./src/routes/enrollment.route"));
+app.use("/api/tickets", require("./src/routes/ticket.route"));
 app.use("/api/upload", require("./src/routes/upload.route"));
 
 app.listen(process.env.PORT, () => console.log("Server running on port " + process.env.PORT));
