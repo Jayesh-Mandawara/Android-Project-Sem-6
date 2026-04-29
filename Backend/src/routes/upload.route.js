@@ -4,6 +4,7 @@ const multer = require("multer");
 
 const { uploadVideo } = require("../controllers/upload.controller");
 
+// upload files max of 100 MB
 const upload = multer({
     dest: "uploads/",
     limits: {
