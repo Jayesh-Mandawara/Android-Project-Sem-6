@@ -5,7 +5,7 @@ const { protect, restrictTo } = require("../middleware/auth.middleware");
 
 router.use(protect);
 
-router.post("/", restrictTo("STUDENT"), ticketController.createTicket);
+router.post("/", restrictTo("STUDENT", "INSTRUCTOR"), ticketController.createTicket);
 router.get("/", ticketController.getTickets);
 router.post("/:id/reply", ticketController.replyToTicket);
 router.patch("/:id/close", restrictTo("ADMIN", "INSTRUCTOR"), ticketController.closeTicket);

@@ -20,12 +20,16 @@ const ticketSchema = new mongoose.Schema({
     student: {
         type: mongoose.Schema.ObjectId,
         ref: "User",
-        required: [true, "Ticket must belong to a student"],
+        required: [true, "Ticket must belong to a user"],
     },
     course: {
         type: mongoose.Schema.ObjectId,
         ref: "Course",
-        required: [true, "Ticket must be related to a course"],
+        required: false,
+    },
+    isHelpCenter: {
+        type: Boolean,
+        default: false,
     },
     subject: {
         type: String,

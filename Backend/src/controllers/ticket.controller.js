@@ -2,19 +2,29 @@ const Ticket = require("../models/ticket.model");
 
 exports.createTicket = async (req, res) => {
     try {
-        const { courseId, subject, description } = req.body;
+        const { courseId, subject, description, isHelpCenter } = req.body;
         const studentId = req.user.id;
 
-        const ticket = await Ticket.create({
+        const ticketData = {
             student: studentId,
-            course: courseId,
             subject,
             description,
-        });
+            isHelpCenter: isHelpCenter || false
+        };
+
+        if (courseId) {
+            ticketData.course = courseId;
+        }
+
+        const ticket = await Ticket.create(ticketData);
+
+        const populatedTicket = await Ticket.findById(ticket._id)
+            .populate("student", "name email")
+            .populate("course", "title");
 
         res.status(201).json({
             status: "success",
-            data: { ticket },
+            data: { ticket: populatedTicket },
         });
     } catch (err) {
         res.status(400).json({ status: "fail", message: err.message });
@@ -61,9 +71,13 @@ exports.replyToTicket = async (req, res) => {
 
         await ticket.save();
 
+        const populatedTicket = await Ticket.findById(ticketId)
+            .populate("student", "name email")
+            .populate("course", "title");
+
         res.status(200).json({
             status: "success",
-            data: { ticket },
+            data: { ticket: populatedTicket },
         });
     } catch (err) {
         res.status(500).json({ status: "error", message: err.message });
@@ -72,7 +86,9 @@ exports.replyToTicket = async (req, res) => {
 
 exports.closeTicket = async (req, res) => {
     try {
-        const ticket = await Ticket.findByIdAndUpdate(req.params.id, { status: "CLOSED" }, { new: true });
+        const ticket = await Ticket.findByIdAndUpdate(req.params.id, { status: "CLOSED" }, { new: true })
+            .populate("student", "name email")
+            .populate("course", "title");
         res.status(200).json({
             status: "success",
             data: { ticket },
