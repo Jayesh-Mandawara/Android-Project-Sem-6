@@ -20,7 +20,7 @@ exports.createTicket = async (req, res) => {
         const ticket = await Ticket.create(ticketData);
 
         const populatedTicket = await Ticket.findById(ticket._id)
-            .populate("student", "name email")
+            .populate("student", "name email role")
             .populate("course", "title");
 
         res.status(201).json({
@@ -52,7 +52,7 @@ exports.getTickets = async (req, res) => {
             filter.course = req.query.courseId;
         }
 
-        const tickets = await Ticket.find(filter).populate("student", "name email").populate("course", "title");
+        const tickets = await Ticket.find(filter).populate("student", "name email role").populate("course", "title");
 
         res.status(200).json({
             status: "success",
@@ -71,7 +71,7 @@ exports.replyToTicket = async (req, res) => {
 
         const ticket = await Ticket.findById(ticketId);
         if (!ticket) {
-            return res.status(404).json({ status: "fail", message: "Ticket not found" });
+            return res.status(404).json({ status: "fail", message: "Ticket find failed" });
         }
 
         ticket.replies.push({
@@ -82,7 +82,7 @@ exports.replyToTicket = async (req, res) => {
         await ticket.save();
 
         const populatedTicket = await Ticket.findById(ticketId)
-            .populate("student", "name email")
+            .populate("student", "name email role")
             .populate("course", "title");
 
         res.status(200).json({
@@ -97,7 +97,7 @@ exports.replyToTicket = async (req, res) => {
 exports.closeTicket = async (req, res) => {
     try {
         const ticket = await Ticket.findByIdAndUpdate(req.params.id, { status: "CLOSED" }, { new: true })
-            .populate("student", "name email")
+            .populate("student", "name email role")
             .populate("course", "title");
         res.status(200).json({
             status: "success",
