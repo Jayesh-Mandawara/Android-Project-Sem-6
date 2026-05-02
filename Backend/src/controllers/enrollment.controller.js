@@ -49,3 +49,27 @@ exports.getMyCourses = async (req, res) => {
         res.status(500).json({ status: "error", message: err.message });
     }
 };
+
+exports.updateProgress = async (req, res) => {
+    try {
+        const { courseId, progress } = req.body;
+        const userId = req.user.id;
+
+        const enrollment = await Enrollment.findOneAndUpdate(
+            { userId, courseId },
+            { progress },
+            { new: true, runValidators: true }
+        );
+
+        if (!enrollment) {
+            return res.status(404).json({ status: "fail", message: "Enrollment not found" });
+        }
+
+        res.status(200).json({
+            status: "success",
+            data: { enrollment },
+        });
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};

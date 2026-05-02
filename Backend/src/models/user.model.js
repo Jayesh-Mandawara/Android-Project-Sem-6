@@ -21,10 +21,16 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: [true, "Please provide a password"],
+        required: [function() { return !this.googleId; }, "Please provide a password"],
         minlength: 8,
         select: false,
     },
+    googleId: {
+        type: String,
+        sparse: true,
+        unique: true
+    },
+    profilePicture: String,
     passwordChangedAt: Date,
 });
 

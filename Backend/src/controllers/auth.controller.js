@@ -65,3 +65,36 @@ exports.login = async (req, res, next) => {
 exports.logout = (req, res) => {
     res.status(200).json({ status: "success", message: "Logged out successfully" });
 };
+
+exports.googleLogin = async (req, res, next) => {
+    try {
+        // Mock Google OAuth endpoint since there's no GCP project set up yet
+        const { email, name, googleId, profilePicture } = req.body;
+
+        if (!email || !googleId) {
+             return res.status(400).json({ status: "fail", message: "Please provide google token data" });
+        }
+
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name,
+                email,
+                googleId,
+                profilePicture,
+                role: "STUDENT" // Default role
+            });
+        } else if (!user.googleId) {
+             // Link google account to existing email
+             user.googleId = googleId;
+             user.profilePicture = profilePicture || user.profilePicture;
+             await user.save({ validateBeforeSave: false });
+        }
+
+        createSendToken(user, 200, res);
+
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};

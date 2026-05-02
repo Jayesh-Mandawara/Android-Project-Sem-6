@@ -7,6 +7,12 @@ const enrollmentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    progress: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+    }
 });
 
 module.exports = mongoose.model("Enrollment", enrollmentSchema);

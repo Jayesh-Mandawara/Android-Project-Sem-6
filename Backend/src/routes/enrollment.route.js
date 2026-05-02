@@ -7,5 +7,6 @@ router.use(protect);
 
 router.post("/enroll", enrollmentController.enrollCourse);
 router.get("/my-courses", enrollmentController.getMyCourses);
+router.patch("/progress", enrollmentController.updateProgress);
 
 module.exports = router;
