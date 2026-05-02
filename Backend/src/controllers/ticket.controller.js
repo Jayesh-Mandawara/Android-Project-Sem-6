@@ -2,7 +2,34 @@ const Ticket = require("../models/ticket.model");
 const Course = require("../models/course.model");
 
 exports.createTicket = async (req, res) => {
-// ... existing createTicket ...
+    try {
+        const { courseId, subject, description, isHelpCenter } = req.body;
+        const studentId = req.user.id;
+
+        const ticketData = {
+            student: studentId,
+            subject,
+            description,
+            isHelpCenter: isHelpCenter || false
+        };
+
+        if (courseId) {
+            ticketData.course = courseId;
+        }
+
+        const ticket = await Ticket.create(ticketData);
+
+        const populatedTicket = await Ticket.findById(ticket._id)
+            .populate("student", "name email")
+            .populate("course", "title");
+
+        res.status(201).json({
+            status: "success",
+            data: { ticket: populatedTicket },
+        });
+    } catch (err) {
+        res.status(400).json({ status: "fail", message: err.message });
+    }
 };
 
 exports.getTickets = async (req, res) => {
