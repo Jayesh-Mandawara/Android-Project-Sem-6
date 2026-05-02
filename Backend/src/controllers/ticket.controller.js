@@ -1,34 +1,8 @@
 const Ticket = require("../models/ticket.model");
+const Course = require("../models/course.model");
 
 exports.createTicket = async (req, res) => {
-    try {
-        const { courseId, subject, description, isHelpCenter } = req.body;
-        const studentId = req.user.id;
-
-        const ticketData = {
-            student: studentId,
-            subject,
-            description,
-            isHelpCenter: isHelpCenter || false
-        };
-
-        if (courseId) {
-            ticketData.course = courseId;
-        }
-
-        const ticket = await Ticket.create(ticketData);
-
-        const populatedTicket = await Ticket.findById(ticket._id)
-            .populate("student", "name email")
-            .populate("course", "title");
-
-        res.status(201).json({
-            status: "success",
-            data: { ticket: populatedTicket },
-        });
-    } catch (err) {
-        res.status(400).json({ status: "fail", message: err.message });
-    }
+// ... existing createTicket ...
 };
 
 exports.getTickets = async (req, res) => {
@@ -36,6 +10,15 @@ exports.getTickets = async (req, res) => {
         let filter = {};
         if (req.user.role === "STUDENT") {
             filter.student = req.user.id;
+        } else if (req.user.role === "INSTRUCTOR") {
+            const courses = await Course.find({ instructorName: req.user.name });
+            const courseIds = courses.map(c => c._id);
+            filter = {
+                $or: [
+                    { course: { $in: courseIds } },
+                    { student: req.user.id }
+                ]
+            };
         }
 
         if (req.query.courseId) {

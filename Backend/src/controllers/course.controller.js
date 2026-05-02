@@ -35,7 +35,7 @@ exports.getCourse = async (req, res) => {
         // Admin/Instructor can see all videos
         res.status(200).json({
             status: "success",
-            data: { course },
+            data: course.toObject(),
         });
     } catch (err) {
         res.status(500).json({ status: "error", message: err.message });
