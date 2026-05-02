@@ -11,5 +11,8 @@ router.patch("/updateMe", userController.updateMe);
 
 router.get("/", restrictTo("ADMIN"), userController.getAllUsers);
 router.get("/:id", restrictTo("ADMIN"), userController.getUserById);
+router.patch("/:id/block", restrictTo("ADMIN"), userController.blockUser);
+router.delete("/:id", restrictTo("ADMIN"), userController.deleteUser);
+router.patch("/:id/force-reset", restrictTo("ADMIN"), userController.forceResetPassword);
 
 module.exports = router;

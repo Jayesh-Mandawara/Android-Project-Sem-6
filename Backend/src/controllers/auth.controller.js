@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
+const crypto = require("crypto");
+const sendEmail = require("../utils/email");
 
 const signToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -43,19 +45,20 @@ exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
-        // 1) Check if email and password exist
         if (!email || !password) {
             return res.status(400).json({ status: "fail", message: "Please provide email and password!" });
         }
 
-        // 2) Check if user exists && password is correct
-        const user = await User.findOne({ email }).select("+password");
+        const user = await User.findOne({ email }).select("+password +isActive");
 
         if (!user || !(await user.correctPassword(password, user.password))) {
             return res.status(401).json({ status: "fail", message: "Incorrect email or password" });
         }
 
-        // 3) If everything ok, send token to client
+        if (user.isActive === false) {
+            return res.status(403).json({ status: "fail", message: "Your account has been blocked by an administrator." });
+        }
+
         createSendToken(user, 200, res);
     } catch (err) {
         res.status(500).json({ status: "error", message: err.message });
@@ -66,34 +69,63 @@ exports.logout = (req, res) => {
     res.status(200).json({ status: "success", message: "Logged out successfully" });
 };
 
-exports.googleLogin = async (req, res, next) => {
+exports.forgotPassword = async (req, res, next) => {
     try {
-        // Mock Google OAuth endpoint since there's no GCP project set up yet
-        const { email, name, googleId, profilePicture } = req.body;
-
-        if (!email || !googleId) {
-             return res.status(400).json({ status: "fail", message: "Please provide google token data" });
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) {
+            return res.status(404).json({ status: "fail", message: "There is no user with email address." });
         }
 
-        let user = await User.findOne({ email });
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        user.passwordResetOTP = otp;
+        user.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+        await user.save({ validateBeforeSave: false });
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: "Your password reset OTP (valid for 10 min)",
+                message: `Your password reset OTP is: ${otp}`,
+            });
+
+            res.status(200).json({
+                status: "success",
+                message: "OTP sent to email!",
+            });
+        } catch (err) {
+            console.error("Email send failed:", err);
+            user.passwordResetOTP = undefined;
+            user.passwordResetExpires = undefined;
+            await user.save({ validateBeforeSave: false });
+
+            return res.status(500).json({ status: "error", message: "There was an error sending the email. Try again later!" });
+        }
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};
+
+exports.resetPassword = async (req, res, next) => {
+    try {
+        const { email, otp, password } = req.body;
+
+        const user = await User.findOne({
+            email,
+            passwordResetOTP: otp,
+            passwordResetExpires: { $gt: Date.now() },
+        });
 
         if (!user) {
-            user = await User.create({
-                name,
-                email,
-                googleId,
-                profilePicture,
-                role: "STUDENT" // Default role
-            });
-        } else if (!user.googleId) {
-             // Link google account to existing email
-             user.googleId = googleId;
-             user.profilePicture = profilePicture || user.profilePicture;
-             await user.save({ validateBeforeSave: false });
+            return res.status(400).json({ status: "fail", message: "OTP is invalid or has expired" });
         }
 
-        createSendToken(user, 200, res);
+        user.password = password;
+        user.passwordResetOTP = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
 
+        createSendToken(user, 200, res);
     } catch (err) {
         res.status(500).json({ status: "error", message: err.message });
     }

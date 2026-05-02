@@ -76,3 +76,23 @@ exports.getAllCourses = async (req, res) => {
         res.status(500).json({ status: "error", message: err.message });
     }
 };
+
+exports.updateCourse = async (req, res) => {
+    try {
+        const course = await Course.findByIdAndUpdate(req.params.courseId, req.body, {
+            new: true,
+            runValidators: true,
+        });
+
+        if (!course) {
+            return res.status(404).json({ status: "fail", message: "Course not found" });
+        }
+
+        res.status(200).json({
+            status: "success",
+            data: { course },
+        });
+    } catch (err) {
+        res.status(400).json({ status: "fail", message: err.message });
+    }
+};
