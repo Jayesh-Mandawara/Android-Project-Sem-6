@@ -14,6 +14,12 @@ exports.submitPendingContent = async (req, res) => {
             contentData,
         });
 
+        // Populate instructorId and courseId to match frontend DTO (expects objects, not string IDs)
+        await pending.populate("instructorId", "name email role isActive profilePicture");
+        if (pending.courseId) {
+            await pending.populate("courseId", "title");
+        }
+
         res.status(201).json({ status: "success", data: { pending } });
     } catch (err) {
         res.status(400).json({ status: "fail", message: err.message });

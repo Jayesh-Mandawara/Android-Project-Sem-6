@@ -96,3 +96,16 @@ exports.updateCourse = async (req, res) => {
         res.status(400).json({ status: "fail", message: err.message });
     }
 };
+
+exports.getInstructorCourses = async (req, res) => {
+    try {
+        const courses = await Course.find({ instructorName: req.user.name });
+        res.status(200).json({
+            status: "success",
+            results: courses.length,
+            data: { courses },
+        });
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};
