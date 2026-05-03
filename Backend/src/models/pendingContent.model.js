@@ -13,7 +13,7 @@ const pendingContentSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ["NEW_COURSE", "NEW_VIDEO"],
+        enum: ["NEW_COURSE", "NEW_VIDEO", "NEW_NOTES"],
         required: true,
     },
     contentData: {

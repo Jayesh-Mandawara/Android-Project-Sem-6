@@ -54,6 +54,12 @@ exports.approvePendingContent = async (req, res) => {
             
             course.videos.push(pending.contentData);
             await course.save();
+        } else if (pending.type === "NEW_NOTES") {
+            const course = await Course.findById(pending.courseId);
+            if (!course) return res.status(404).json({ status: "fail", message: "Course not found" });
+            
+            course.notes.push(pending.contentData);
+            await course.save();
         }
 
         pending.status = "APPROVED";

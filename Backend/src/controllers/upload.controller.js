@@ -10,7 +10,7 @@ exports.uploadVideo = async (req, res) => {
         }
 
         const result = await cloudinary.uploader.upload(file.path, {
-            resource_type: "video",
+            resource_type: "auto",
         });
 
         // Delete the file from local uploads folder
