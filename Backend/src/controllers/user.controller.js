@@ -79,6 +79,11 @@ exports.blockUser = async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ status: "fail", message: "User not found" });
 
+        // Prevent admin from blocking themselves
+        if (user._id.toString() === req.user.id.toString()) {
+            return res.status(400).json({ status: "fail", message: "You cannot block yourself." });
+        }
+
         user.isActive = !user.isActive;
         await user.save({ validateBeforeSave: false });
 
@@ -90,6 +95,11 @@ exports.blockUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     try {
+        // Prevent admin from deleting themselves
+        if (req.params.id === req.user.id) {
+            return res.status(400).json({ status: "fail", message: "You cannot delete yourself." });
+        }
+
         await User.findByIdAndDelete(req.params.id);
         res.status(204).json({ status: "success", data: null });
     } catch (err) {
@@ -106,6 +116,39 @@ exports.forceResetPassword = async (req, res) => {
         await user.save();
 
         res.status(200).json({ status: "success", message: "Password reset to shiksha123" });
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};
+
+exports.getPendingInstructors = async (req, res) => {
+    try {
+        const instructors = await User.find({ role: "INSTRUCTOR", isActive: false });
+        res.status(200).json({
+            status: "success",
+            results: instructors.length,
+            data: { instructors },
+        });
+    } catch (err) {
+        res.status(500).json({ status: "error", message: err.message });
+    }
+};
+
+exports.approveInstructor = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user || user.role !== "INSTRUCTOR") {
+            return res.status(404).json({ status: "fail", message: "Instructor not found" });
+        }
+
+        user.isActive = true;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            status: "success",
+            message: "Instructor approved successfully!",
+            data: { user },
+        });
     } catch (err) {
         res.status(500).json({ status: "error", message: err.message });
     }

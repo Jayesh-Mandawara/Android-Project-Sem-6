@@ -9,6 +9,9 @@ router.use(protect);
 router.get("/profile", userController.getMe);
 router.patch("/updateMe", userController.updateMe);
 
+router.get("/pending-instructors", restrictTo("ADMIN"), userController.getPendingInstructors);
+router.patch("/:id/approve-instructor", restrictTo("ADMIN"), userController.approveInstructor);
+
 router.get("/", restrictTo("ADMIN"), userController.getAllUsers);
 router.get("/:id", restrictTo("ADMIN"), userController.getUserById);
 router.patch("/:id/block", restrictTo("ADMIN"), userController.blockUser);

@@ -28,12 +28,34 @@ exports.register = async (req, res, next) => {
     try {
         const { name, email, password, role } = req.body;
 
+        // Basic format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ status: "fail", message: "Invalid email format" });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ status: "fail", message: "Password must be at least 8 characters" });
+        }
+
+        const userRole = role || "STUDENT";
+        // Instructors start inactive and need admin approval
+        const isActive = userRole !== "INSTRUCTOR";
+
         const newUser = await User.create({
             name,
             email,
             password,
-            role: role || "STUDENT",
+            role: userRole,
+            isActive
         });
+
+        if (!isActive) {
+            return res.status(201).json({
+                status: "success",
+                message: "Registration successful! Your instructor account is pending admin approval.",
+                data: { user: newUser }
+            });
+        }
 
         createSendToken(newUser, 201, res);
     } catch (err) {
@@ -56,7 +78,10 @@ exports.login = async (req, res, next) => {
         }
 
         if (user.isActive === false) {
-            return res.status(403).json({ status: "fail", message: "Your account has been blocked by an administrator." });
+            const message = user.role === "INSTRUCTOR" 
+                ? "Your instructor account is pending approval by an administrator."
+                : "Your account has been blocked by an administrator.";
+            return res.status(403).json({ status: "fail", message });
         }
 
         createSendToken(user, 200, res);
