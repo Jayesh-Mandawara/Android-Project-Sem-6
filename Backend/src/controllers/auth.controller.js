@@ -38,7 +38,8 @@ exports.register = async (req, res, next) => {
         }
 
         const userRole = (role || "STUDENT").toUpperCase();
-        // Instructors start inactive and need admin approval
+
+        // Instructors start inactive and needs admin approval
         const isActive = userRole !== "INSTRUCTOR";
 
         const newUser = await User.create({
@@ -52,7 +53,7 @@ exports.register = async (req, res, next) => {
         if (!isActive) {
             return res.status(201).json({
                 status: "success",
-                message: "Registration successful! Your instructor account is pending admin approval.",
+                message: "Registration successful! Your instructor account is pending for admin's approval.",
                 data: { user: newUser }
             });
         }
@@ -98,7 +99,7 @@ exports.forgotPassword = async (req, res, next) => {
     try {
         const user = await User.findOne({ email: req.body.email });
         if (!user) {
-            return res.status(404).json({ status: "fail", message: "There is no user with email address." });
+            return res.status(404).json({ status: "fail", message: "There is no user with the email address." });
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -110,7 +111,7 @@ exports.forgotPassword = async (req, res, next) => {
         try {
             await sendEmail({
                 email: user.email,
-                subject: "Your password reset OTP (valid for 10 min)",
+                subject: "Your password reset OTP (valid for 10 minutes)",
                 message: `Your password reset OTP is: ${otp}`,
             });
 
