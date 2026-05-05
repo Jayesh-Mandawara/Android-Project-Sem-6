@@ -1,7 +1,7 @@
 const cloudinary = require("../config/cloudinary.config");
 const fs = require("fs");
 
-exports.uploadVideo = async (req, res) => {
+exports.uploadFile = async (req, res) => {
     try {
         const file = req.file;
 
@@ -18,8 +18,10 @@ exports.uploadVideo = async (req, res) => {
             if (err) console.error("Error deleting local file:", err);
         });
 
+        // Return the secure URL from Cloudinary
         res.json({
-            videoUrl: result.secure_url,
+            fileUrl: result.secure_url,
+            resource_type: result.resource_type,
         });
     } catch (err) {
         // Also try to delete file if upload failed

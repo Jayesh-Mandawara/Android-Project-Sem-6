@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 
-const { uploadVideo } = require("../controllers/upload.controller");
+const { uploadFile } = require("../controllers/upload.controller");
 
 // upload files max of 100 MB
 const upload = multer({
@@ -12,6 +12,6 @@ const upload = multer({
     },
 });
 
-router.post("/", upload.single("video"), uploadVideo);
+router.post("/", upload.single("file"), uploadFile);
 
 module.exports = router;

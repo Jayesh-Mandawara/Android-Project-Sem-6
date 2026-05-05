@@ -37,7 +37,7 @@ exports.register = async (req, res, next) => {
             return res.status(400).json({ status: "fail", message: "Password must be at least 8 characters" });
         }
 
-        const userRole = role || "STUDENT";
+        const userRole = (role || "STUDENT").toUpperCase();
         // Instructors start inactive and need admin approval
         const isActive = userRole !== "INSTRUCTOR";
 

@@ -123,7 +123,10 @@ exports.forceResetPassword = async (req, res) => {
 
 exports.getPendingInstructors = async (req, res) => {
     try {
-        const instructors = await User.find({ role: "INSTRUCTOR", isActive: false });
+        const instructors = await User.find({ 
+            role: { $regex: /^INSTRUCTOR$/i }, 
+            isActive: false 
+        });
         res.status(200).json({
             status: "success",
             results: instructors.length,
