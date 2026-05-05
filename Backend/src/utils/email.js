@@ -12,7 +12,7 @@ const sendEmail = async (options) => {
             user: process.env.EMAIL_USERNAME,
             pass: process.env.EMAIL_PASSWORD,
         },
-        connectionTimeout: 10000 // fail after 10 seconds
+        connectionTimeout: 10000 // It will fail after 10 seconds
     });
 
     const mailOptions = {
